@@ -435,7 +435,9 @@ function restoreFocusSnapshot(snap){
         <div class="row">
           <div class="input-group" style="flex:2">
             <label>Nome do Candidato</label>
-            <input data-focus="cand-${c.id}-name" value="${c.name}" placeholder="Ex: Dr. Joao Silva" oninput="updateField(${c.id},'name',this.value)">
+           <input id="cand-name-${c.id}" data-focus="cand-name-${c.id}"
+  value="${c.name}" placeholder="Ex: Dr. Joao Silva"
+  oninput="updateField(${c.id},'name',this.value)">
           </div>
           <div class="input-group">
             <label>Perfil de Representatividade</label>
@@ -608,7 +610,7 @@ function restoreFocusSnapshot(snap){
   </div>`;
 
   app.innerHTML = html;
-  restoreFocusSnapshot(snap);
+requestAnimationFrame(() => restoreFocusSnapshot(snap));
 }
 
 // ============================================================
@@ -617,6 +619,7 @@ function restoreFocusSnapshot(snap){
 function updateField(id,field,value){
   state.candidates = state.candidates.map(c=>c.id===id?{...c,[field]:value}:c);
   save();
+  render();
 }
 function updateScore(id,key,value){
   state.candidates = state.candidates.map(c=>c.id===id?{...c,scores:{...c.scores,[key]:value}}:c);
