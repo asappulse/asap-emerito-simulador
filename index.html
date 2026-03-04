@@ -616,7 +616,7 @@ function restoreFocusSnapshot(snap){
 // ============================================================
 function updateField(id,field,value){
   state.candidates = state.candidates.map(c=>c.id===id?{...c,[field]:value}:c);
-  save(); render();
+  save();
 }
 function updateScore(id,key,value){
   state.candidates = state.candidates.map(c=>c.id===id?{...c,scores:{...c.scores,[key]:value}}:c);
