@@ -472,7 +472,7 @@ function restoreFocusSnapshot(snap){
           </div>
           <div class="input-group" style="margin-bottom:10px">
             <label>URL do LinkedIn</label>
-           <input type="url" id="cand-linkedin-${c.id}" data-focus="cand-linkedin-${c.id}"
+         <input type="url" value="${c.linkedin||''}" placeholder="https://linkedin.com/in/nome" oninput="updateField(${c.id},'linkedin',this.value)">
   value="${c.linkedin||''}" placeholder="https://linkedin.com/in/nome"
   oninput="updateField(${c.id},'linkedin',this.value)">
           </div>
