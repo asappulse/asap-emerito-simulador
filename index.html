@@ -304,44 +304,8 @@ function applyAIResult(id){
 // ============================================================
 // RENDER
 // ============================================================
-
-function getFocusSnapshot(){
-  const el = document.activeElement;
-  const app = document.getElementById('app');
-  if(!el || !app || !app.contains(el)) return null;
-
-  const tag = el.tagName;
-  const isText = tag === 'INPUT' || tag === 'TEXTAREA';
-
-  return {
-    id: el.id || null,
-    name: el.getAttribute('data-focus') || null,
-    tag,
-    selStart: isText ? el.selectionStart : null,
-    selEnd: isText ? el.selectionEnd : null
-  };
-}
-
-function restoreFocusSnapshot(snap){
-  if(!snap) return;
-
-  let el = null;
-  if(snap.id) el = document.getElementById(snap.id);
-  if(!el && snap.name) el = document.querySelector(`[data-focus="${snap.name}"]`);
-  if(!el) return;
-
-  el.focus({preventScroll:true});
-
-  if((snap.tag === 'INPUT' || snap.tag === 'TEXTAREA') && snap.selStart!=null){
-    try{ el.setSelectionRange(snap.selStart, snap.selEnd); }catch(e){}
-  }
-}
-
 function render(){
-  const snap = getFocusSnapshot();
-
   const app = document.getElementById('app');
-
   const enriched = state.candidates.map(c=>({...c, totalScore: calcScore(c.scores, c.nivel)}));
   const ranking = enriched.filter(c=>c.name.trim()).sort((a,b)=>b.totalScore-a.totalScore);
 
@@ -413,23 +377,208 @@ function render(){
       <div class="tab" onclick="addCandidate()" style="border:2px dashed #cbd5e1;background:transparent;color:#64748b">+ Adicionar</div>
     </div>`;
 
-  // (Aqui permanece exatamente o restante do seu HTML dinâmico: editor do candidato, filtros, tabela, botões)
-  // IMPORTANTE: você deve manter o restante do seu bloco original a partir do:
-  //   // Active editor
-  // até o final do HTML, sem mexer na lógica.
-  // Para simplificar: depois desse ponto, cole de volta o conteúdo do seu render() original
-  // começando em:  // Active editor
-app.innerHTML = html;
-requestAnimationFrame(() => restoreFocusSnapshot(snap));
+  // Active editor
+  if(state.activeTab){
+    const c = state.candidates.find(x=>x.id===state.activeTab);
+    if(c){
+      const quad = getQuadrante(c.scores.influencia, c.scores.proximidade);
+      const ad = getAderencia(c.scores, c.perfil, c.nivel);
+      const sc = calcScore(c.scores, c.nivel);
+
+      html += `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h3 style="margin:0">Avaliacao do Candidato</h3>
+          <div style="display:flex;gap:10px;align-items:center">
+            <span class="badge ${ad.cls}">${ad.icon} Aderencia: ${ad.label}</span>
+            <span class="badge" style="font-size:14px;font-weight:800;color:${getClassificacao(sc).badge==='A'?'#15803d':'#2563eb'}">${sc} pts</span>
+            ${state.candidates.length>1?`<button class="btn btn-danger btn-sm" onclick="removeCandidate(${c.id})">Remover</button>`:''}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-group" style="flex:2">
+            <label>Nome do Candidato</label>
+            <input value="${c.name}" placeholder="Ex: Dr. Joao Silva" oninput="updateField(${c.id},'name',this.value)">
+          </div>
+          <div class="input-group">
+            <label>Perfil de Representatividade</label>
+            <select onchange="updateField(${c.id},'perfil',this.value)">
+              <option value="">Selecione...</option>
+              ${PERFIS.map(p=>`<option value="${p.value}" ${c.perfil===p.value?'selected':''}>${p.icon} ${p.label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-group">
+            <label>Instituicao / Origem</label>
+            <input value="${c.origem||''}" placeholder="Ex: ANAMT, Vale, Governo Federal..." oninput="updateField(${c.id},'origem',this.value)">
+          </div>
+          <div class="input-group">
+            <label>Mercado de Atuacao</label>
+            <select onchange="updateField(${c.id},'mercado',this.value)">
+              <option value="">Selecione...</option>
+              ${MERCADOS.map(m=>`<option value="${m}" ${c.mercado===m?'selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <!-- LinkedIn + AI -->
+        <div class="linkedin-section">
+          <div class="li-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn + Analise por IA
+          </div>
+          <div class="input-group" style="margin-bottom:10px">
+            <label>URL do LinkedIn</label>
+            <input type="url" value="${c.linkedin||''}" placeholder="https://linkedin.com/in/nome" oninput="updateField(${c.id},'linkedin',this.value)">
+          </div>
+          <div class="input-group" style="margin-bottom:10px">
+            <label>Informacoes do perfil (cole aqui o resumo, cargo, experiencia)</label>
+            <textarea placeholder="Cole aqui as informacoes do perfil LinkedIn: cargo atual, experiencia, board seats, publicacoes, formacao..."
+              oninput="updateField(${c.id},'linkedinNotas',this.value)">${c.linkedinNotas||''}</textarea>
+          </div>
+          <button class="btn btn-primary" onclick="runAI(${c.id})" ${!state.apiKey||state.analyzing?'disabled':''}>
+            ${state.analyzing?'<span class="loading"></span> Analisando...':'\u{1F916} Analisar com IA e sugerir scores'}
+          </button>
+          <span style="font-size:11px;color:#64748b;margin-left:10px">${!state.apiKey?'Configure a API Key acima':''}</span>
+
+          ${state.aiResult && !state.aiResult.error ? `
+            <div class="ai-box">
+              <h4>\u{1F916} Sugestao da IA</h4>
+              <p><strong>Perfil:</strong> ${state.aiResult.perfil_sugerido} | <strong>Nivel:</strong> ${state.aiResult.nivel_sugerido} | <strong>Mercado:</strong> ${state.aiResult.mercado_sugerido}</p>
+              <p style="margin-top:6px"><strong>Scores sugeridos:</strong> Autoridade ${state.aiResult.scores?.autoridade}, Articulacao ${state.aiResult.scores?.articulacao}, Legitimidade ${state.aiResult.scores?.legitimidade}, Representatividade ${state.aiResult.scores?.representatividade}, Influencia ${state.aiResult.scores?.influencia}, Proximidade ${state.aiResult.scores?.proximidade}</p>
+              <p style="margin-top:6px">${state.aiResult.justificativa}</p>
+              <p style="margin-top:4px;font-size:11px"><strong>Pontos fortes:</strong> ${(state.aiResult.pontos_fortes||[]).join(', ')}</p>
+              <p style="font-size:11px"><strong>Atencao:</strong> ${(state.aiResult.pontos_atencao||[]).join(', ')}</p>
+              <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="applyAIResult(${c.id})">\u{2705} Aplicar sugestoes da IA</button>
+              <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="state.aiResult=null;render()">Descartar</button>
+            </div>
+          `:''}
+          ${state.aiResult?.error ? `<div style="margin-top:10px;padding:10px;background:#fef2f2;border-radius:8px;font-size:12px;color:#dc2626">Erro: ${state.aiResult.error}</div>`:''}
+        </div>
+
+        <!-- Badges -->
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+          <span class="badge ${quad.cls}">${quad.label}</span>
+          ${c.perfil?`<span class="badge badge-purple">${PERFIS.find(p=>p.value===c.perfil)?.icon||''} ${PERFIS.find(p=>p.value===c.perfil)?.label||''}</span>`:''}
+          ${c.nivel?`<span class="badge" style="color:${NIVEIS.find(n=>n.value===c.nivel)?.color};background:${NIVEIS.find(n=>n.value===c.nivel)?.bg};border:1px solid ${NIVEIS.find(n=>n.value===c.nivel)?.color}33;font-weight:700">Nivel ${c.nivel}</span>`:''}
+        </div>
+
+        <!-- 3-col grid -->
+        <div class="grid-3">
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:#2563eb;border-bottom:2px solid #2563eb;padding-bottom:6px;margin-bottom:14px">Criterios Institucionais</h4>
+            ${CRIT_INST.map(cr=>`
+              <div class="score-slider">
+                <div class="slider-header">
+                  <span>${cr.icon} ${cr.label}</span>
+                  <span class="score-val" style="background:${c.scores[cr.key]>=4?'#15803d':c.scores[cr.key]>=3?'#2563eb':'#ea580c'}">${c.scores[cr.key]}/5</span>
+                </div>
+                <div class="desc">${cr.desc}</div>
+                <input type="range" min="1" max="5" value="${c.scores[cr.key]}" oninput="updateScore(${c.id},'${cr.key}',+this.value)">
+              </div>
+            `).join('')}
+          </div>
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:#ea580c;border-bottom:2px solid #ea580c;padding-bottom:6px;margin-bottom:14px">Quadrantes de Governanca</h4>
+            ${CRIT_GOV.map(cr=>`
+              <div class="score-slider">
+                <div class="slider-header">
+                  <span>${cr.icon} ${cr.label}</span>
+                  <span class="score-val" style="background:${c.scores[cr.key]>=4?'#15803d':c.scores[cr.key]>=3?'#2563eb':'#ea580c'}">${c.scores[cr.key]}/5</span>
+                </div>
+                <div class="desc">${cr.desc}</div>
+                <input type="range" min="1" max="5" value="${c.scores[cr.key]}" oninput="updateScore(${c.id},'${cr.key}',+this.value)">
+              </div>
+            `).join('')}
+          </div>
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:#7c3aed;border-bottom:2px solid #7c3aed;padding-bottom:6px;margin-bottom:14px">Nivel de Decisao</h4>
+            ${NIVEIS.map(n=>`
+              <button class="nivel-btn ${c.nivel===n.value?'active':''}" style="${c.nivel===n.value?`border-color:${n.color};background:${n.bg}`:''}" onclick="updateField(${c.id},'nivel','${n.value}')">
+                <div class="circle" style="background:${c.nivel===n.value?n.color:'#e2e8f0'}">${n.value}</div>
+                <div><div class="nivel-label" style="color:${c.nivel===n.value?n.color:'#475569'}">${n.label}</div><div class="nivel-desc">${n.desc}</div></div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Funcoes -->
+        <div style="margin-top:20px;padding:12px;background:#f8fafc;border-radius:8px">
+          <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px">Funcoes institucionais cumpridas (nota 4+):</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${CRIT_INST.filter(cr=>c.scores[cr.key]>=4).map(cr=>`<span class="badge badge-blue" style="font-size:10px">${cr.icon} ${cr.label}</span>`).join('') || '<span style="font-size:11px;color:#94a3b8">Nenhuma funcao com nota 4+</span>'}
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+
+  // Filters
+  html += `
+    <div class="filter-row">
+      <div class="filter-group">
+        <span>Aderencia:</span>
+        ${['todos','altissimo','alto','neutro'].map(f=>`<button class="filter-btn ${state.filterAderencia===f?'active':''}" onclick="state.filterAderencia='${f}';render()">${f==='todos'?'Todos':f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
+      </div>
+      <div class="filter-group">
+        <span>Nivel:</span>
+        ${['todos','A','B','C','D'].map(f=>`<button class="filter-btn ${state.filterNivel===f?'active':''}" onclick="state.filterNivel='${f}';render()">${f==='todos'?'Todos':'Nivel '+f}</button>`).join('')}
+      </div>
+    </div>`;
+
+  // Ranking table
+  if(filtered.length>0){
+    html += `<div class="card">
+      <h3>Ranking de Qualificacao</h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Nome</th><th>Perfil</th><th>Mercado</th><th style="text-align:center">Nivel</th>
+            <th style="text-align:center">Score</th><th style="text-align:center">Aderencia</th>
+            <th style="text-align:center">Quadrante</th><th style="text-align:center">Funcoes</th>
+          </tr></thead>
+          <tbody>
+            ${filtered.map((c,i)=>{
+              const cl = getClassificacao(c.totalScore);
+              const ad = getAderencia(c.scores,c.perfil,c.nivel);
+              const qu = getQuadrante(c.scores.influencia,c.scores.proximidade);
+              const fn = CRIT_INST.filter(cr=>c.scores[cr.key]>=4).length;
+              const nv = NIVEIS.find(n=>n.value===c.nivel);
+              return `<tr class="clickable" onclick="state.activeTab=${c.id};render();window.scrollTo(0,400)" style="${state.activeTab===c.id?'background:#eff6ff':''}">
+                <td style="font-weight:700;color:#94a3b8">${i+1}</td>
+                <td style="font-weight:600">${c.name}<div style="font-size:10px;color:#94a3b8">${c.origem||''}</div></td>
+                <td>${PERFIS.find(p=>p.value===c.perfil)?.icon||''} <span style="font-size:11px">${PERFIS.find(p=>p.value===c.perfil)?.label||'-'}</span></td>
+                <td style="font-size:11px;color:#64748b">${c.mercado||'-'}</td>
+                <td style="text-align:center"><span class="badge" style="color:${nv?.color||'#6b7280'};background:${nv?.bg||'#f9fafb'};font-weight:700;font-size:11px">${c.nivel||'-'}</span></td>
+                <td style="text-align:center;font-weight:800;font-size:16px;color:${cl.badge==='A'?'#15803d':cl.badge==='B'?'#2563eb':'#ea580c'}">${c.totalScore}</td>
+                <td style="text-align:center"><span class="badge ${ad.cls}" style="font-size:10px">${ad.icon} ${ad.label}</span></td>
+                <td style="text-align:center"><span class="badge ${qu.cls}" style="font-size:9px">${qu.label}</span></td>
+                <td style="text-align:center;font-weight:700;color:${fn>=2?'#15803d':fn>=1?'#ea580c':'#94a3b8'}">${fn}/4</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // Export buttons
+  html += `<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+    <button class="btn btn-secondary" onclick="exportCSV()">\u{1F4CB} Exportar CSV</button>
+    <button class="btn btn-secondary" onclick="resetData()">\u{1F504} Resetar para dados originais</button>
+  </div>`;
+
+  app.innerHTML = html;
 }
- 
+
 // ============================================================
 // ACTIONS
 // ============================================================
 function updateField(id,field,value){
   state.candidates = state.candidates.map(c=>c.id===id?{...c,[field]:value}:c);
-  save();
-  render();
+  save(); render();
 }
 function updateScore(id,key,value){
   state.candidates = state.candidates.map(c=>c.id===id?{...c,scores:{...c.scores,[key]:value}}:c);
