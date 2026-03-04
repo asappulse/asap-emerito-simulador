@@ -420,14 +420,12 @@ function render(){
   // até o final do HTML, sem mexer na lógica.
   // Para simplificar: depois desse ponto, cole de volta o conteúdo do seu render() original
   // começando em:  // Active editor
-  // e terminando antes de: app.innerHTML = html;
 
-  // >>> COLE AQUI O RESTO DO SEU RENDER ORIGINAL (a partir de: // Active editor) <<<
-
+  let html = '';
   app.innerHTML = html;
   requestAnimationFrame(() => restoreFocusSnapshot(snap));
 }
-
+ 
 // ============================================================
 // ACTIONS
 // ============================================================
