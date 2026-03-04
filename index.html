@@ -451,7 +451,9 @@ function restoreFocusSnapshot(snap){
         <div class="row">
           <div class="input-group">
             <label>Instituicao / Origem</label>
-            <input value="${c.origem||''}" placeholder="Ex: ANAMT, Vale, Governo Federal..." oninput="updateField(${c.id},'origem',this.value)">
+           <input id="cand-origem-${c.id}" data-focus="cand-origem-${c.id}"
+  value="${c.origem||''}" placeholder="Ex: ANAMT, Vale, Governo Federal..."
+  oninput="updateField(${c.id},'origem',this.value)">
           </div>
           <div class="input-group">
             <label>Mercado de Atuacao</label>
@@ -470,11 +472,15 @@ function restoreFocusSnapshot(snap){
           </div>
           <div class="input-group" style="margin-bottom:10px">
             <label>URL do LinkedIn</label>
-            <input type="url" value="${c.linkedin||''}" placeholder="https://linkedin.com/in/nome" oninput="updateField(${c.id},'linkedin',this.value)">
+           <input type="url" id="cand-linkedin-${c.id}" data-focus="cand-linkedin-${c.id}"
+  value="${c.linkedin||''}" placeholder="https://linkedin.com/in/nome"
+  oninput="updateField(${c.id},'linkedin',this.value)">
           </div>
           <div class="input-group" style="margin-bottom:10px">
             <label>Informacoes do perfil (cole aqui o resumo, cargo, experiencia)</label>
-            <textarea placeholder="Cole aqui as informacoes do perfil LinkedIn: cargo atual, experiencia, board seats, publicacoes, formacao..."
+          <textarea id="cand-linkedinNotas-${c.id}" data-focus="cand-linkedinNotas-${c.id}"
+  placeholder="Cole aqui as informacoes do perfil LinkedIn: cargo atual, experiencia, board seats, publicacoes, formacao..."
+  oninput="updateField(${c.id},'linkedinNotas',this.value)">${c.linkedinNotas||''}</textarea>
               oninput="updateField(${c.id},'linkedinNotas',this.value)">${c.linkedinNotas||''}</textarea>
           </div>
           <button class="btn btn-primary" onclick="runAI(${c.id})" ${!state.apiKey||state.analyzing?'disabled':''}>
