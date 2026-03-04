@@ -305,6 +305,43 @@ function applyAIResult(id){
 // RENDER
 // ============================================================
 function render(){
+  const snap = getFocusSnapshot();
+ const el = document.activeElement;
+  if(!el) return null;
+
+  const app = document.getElementById('app');
+  if(!app || !app.contains(el)) return null;
+
+  const tag = el.tagName;
+  const isText = tag === 'INPUT' || tag === 'TEXTAREA';
+
+  return {
+    id: el.id || null,
+    name: el.getAttribute('data-focus') || null,
+    tag,
+    selStart: isText ? el.selectionStart : null,
+    selEnd: isText ? el.selectionEnd : null
+  };
+}
+
+function restoreFocusSnapshot(snap){
+  if(!snap) return;
+
+  let el = null;
+
+  if(snap.id) el = document.getElementById(snap.id);
+  if(!el && snap.name) el = document.querySelector(`[data-focus="${snap.name}"]`);
+
+  if(!el) return;
+
+  el.focus({preventScroll:true});
+
+  if((snap.tag === 'INPUT' || snap.tag === 'TEXTAREA') && snap.selStart!=null){
+    try{
+      el.setSelectionRange(snap.selStart, snap.selEnd);
+    }catch(e){}
+  }
+}
   const app = document.getElementById('app');
   const enriched = state.candidates.map(c=>({...c, totalScore: calcScore(c.scores, c.nivel)}));
   const ranking = enriched.filter(c=>c.name.trim()).sort((a,b)=>b.totalScore-a.totalScore);
@@ -398,7 +435,7 @@ function render(){
         <div class="row">
           <div class="input-group" style="flex:2">
             <label>Nome do Candidato</label>
-            <input value="${c.name}" placeholder="Ex: Dr. Joao Silva" oninput="updateField(${c.id},'name',this.value)">
+            <input data-focus="cand-${c.id}-name" value="${c.name}" placeholder="Ex: Dr. Joao Silva" oninput="updateField(${c.id},'name',this.value)">
           </div>
           <div class="input-group">
             <label>Perfil de Representatividade</label>
@@ -571,6 +608,7 @@ function render(){
   </div>`;
 
   app.innerHTML = html;
+  restoreFocusSnapshot(snap);
 }
 
 // ============================================================
