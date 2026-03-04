@@ -301,7 +301,6 @@ function applyAIResult(id){
   render();
 }
 
-<script>
 // ============================================================
 // RENDER
 // ============================================================
@@ -420,10 +419,8 @@ function render(){
   // até o final do HTML, sem mexer na lógica.
   // Para simplificar: depois desse ponto, cole de volta o conteúdo do seu render() original
   // começando em:  // Active editor
-
-  let html = '';
-  app.innerHTML = html;
-  requestAnimationFrame(() => restoreFocusSnapshot(snap));
+app.innerHTML = html;
+requestAnimationFrame(() => restoreFocusSnapshot(snap));
 }
  
 // ============================================================
