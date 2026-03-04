@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ASAP - Simulador Conselho Emerito</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Inter',-apple-system,sans-serif;background:#f8fafc;color:#1e293b}
+  .container{max-width:1100px;margin:0 auto;padding:20px}
+  .header{background:linear-gradient(135deg,#1e3a5f,#2563eb);border-radius:16px;padding:32px 28px;margin-bottom:24px;color:#fff}
+  .header h1{font-size:26px;font-weight:800;margin-bottom:8px}
+  .header p{font-size:14px;opacity:.85;line-height:1.5}
+  .header small{font-size:11px;text-transform:uppercase;letter-spacing:2px;opacity:.7}
+  .card{background:#fff;border-radius:12px;padding:24px;margin-bottom:20px;border:1px solid #e2e8f0}
+  .card h3{font-size:16px;font-weight:700;margin-bottom:16px}
+  .input-group{margin-bottom:16px}
+  .input-group label{display:block;font-size:12px;font-weight:600;color:#64748b;margin-bottom:4px}
+  .input-group input,.input-group select,.input-group textarea{width:100%;padding:10px 14px;border-radius:8px;border:1px solid #e2e8f0;font-size:14px;font-family:inherit;outline:none}
+  .input-group textarea{resize:vertical;min-height:100px;line-height:1.5}
+  .input-group input:focus,.input-group select:focus,.input-group textarea:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+  .row{display:flex;gap:16px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:200px}
+  .btn{padding:12px 24px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:8px}
+  .btn-primary{background:#2563eb;color:#fff}.btn-primary:hover{background:#1d4ed8}
+  .btn-primary:disabled{background:#94a3b8;cursor:not-allowed}
+  .btn-secondary{background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}.btn-secondary:hover{background:#e2e8f0}
+  .btn-danger{background:#fef2f2;color:#dc2626;border:1px solid #fecaca}.btn-danger:hover{background:#fee2e2}
+  .btn-sm{padding:6px 14px;font-size:12px;border-radius:8px}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:700}
+  .badge-green{color:#15803d;background:#f0fdf4;border:1px solid #bbf7d0}
+  .badge-blue{color:#2563eb;background:#eff6ff;border:1px solid #bfdbfe}
+  .badge-gray{color:#6b7280;background:#f9fafb;border:1px solid #e5e7eb}
+  .badge-red{color:#dc2626;background:#fef2f2;border:1px solid #fecaca}
+  .badge-orange{color:#ea580c;background:#fff7ed;border:1px solid #fed7aa}
+  .badge-purple{color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe}
+  .score-slider{margin-bottom:14px}
+  .score-slider .slider-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+  .score-slider .slider-header span:first-child{font-size:13px;font-weight:600}
+  .score-slider .desc{font-size:11px;color:#64748b;margin-bottom:4px}
+  .score-slider input[type=range]{width:100%;accent-color:#2563eb}
+  .score-val{font-size:11px;font-weight:700;color:#fff;padding:2px 10px;border-radius:12px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .nivel-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;text-align:left;border:1px solid #e2e8f0;background:#fff;width:100%;margin-bottom:6px;transition:all .15s}
+  .nivel-btn.active{border-width:2px}
+  .nivel-btn .circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0}
+  .nivel-btn .nivel-label{font-size:13px;font-weight:600}
+  .nivel-btn .nivel-desc{font-size:10px;color:#64748b;margin-top:1px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 8px;color:#64748b;font-weight:600;border-bottom:2px solid #e2e8f0}
+  td{padding:12px 8px;border-bottom:1px solid #f1f5f9}
+  tr.clickable{cursor:pointer}tr.clickable:hover{background:#f8fafc}
+  .stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px}
+  .stat-card{background:#fff;border-radius:10px;padding:14px;border:1px solid #e2e8f0;text-align:center}
+  .stat-card .val{font-size:22px;font-weight:800}
+  .stat-card .lbl{font-size:10px;color:#64748b;margin-top:2px}
+  .linkedin-section{background:#f8fafc;border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid #e2e8f0}
+  .linkedin-section .li-header{font-size:13px;font-weight:700;color:#0a66c2;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .loading{display:inline-block;width:16px;height:16px;border:2px solid #e2e8f0;border-top-color:#2563eb;border-radius:50%;animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ai-box{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:16px;margin:16px 0}
+  .ai-box h4{font-size:13px;font-weight:700;color:#15803d;margin-bottom:8px}
+  .ai-box p{font-size:12px;color:#475569;line-height:1.6}
+  .api-config{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:16px;margin-bottom:20px}
+  .api-config h4{font-size:13px;font-weight:700;color:#ea580c;margin-bottom:8px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+  .tab{padding:8px 14px;border-radius:10px;border:1px solid #e2e8f0;background:#fff;cursor:pointer;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all .15s}
+  .tab.active{border:2px solid #2563eb;background:#eff6ff}
+  .tab .mini-badge{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px}
+  .filter-row{display:flex;gap:16px;margin-bottom:16px;align-items:center;flex-wrap:wrap}
+  .filter-group{display:flex;gap:6px;align-items:center}
+  .filter-group span{font-size:12px;font-weight:600;color:#64748b}
+  .filter-btn{padding:4px 10px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid #e2e8f0;background:#fff;color:#64748b}
+  .filter-btn.active{border:2px solid #2563eb;background:#eff6ff;color:#2563eb}
+  .hidden{display:none}
+  @media(max-width:768px){.grid-3{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}.stats-grid{grid-template-columns:repeat(3,1fr)}.row>*{min-width:100%}}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+// ============================================================
+// DATA & CONFIG
+// ============================================================
+const PERFIS = [
+  {value:"lider_corporativo",label:"Lider Corporativo",icon:"\u{1F3E2}"},
+  {value:"lider_publico",label:"Lider Publico",icon:"\u{2696}\u{FE0F}"},
+  {value:"lider_saude",label:"Lider em Saude",icon:"\u{1F3E5}"},
+  {value:"educador",label:"Educador / Academico",icon:"\u{1F393}"},
+  {value:"lider_feminino",label:"Lideranca Feminina",icon:"\u{1F469}\u{200D}\u{1F4BC}"},
+  {value:"lider_setorial",label:"Lider Setorial",icon:"\u{1F3ED}"},
+];
+
+const MERCADOS = [
+  "Saude - Operadoras / Hospitais","Saude Ocupacional / SST","Alimentos e Proteina Animal",
+  "Varejo Alimentar / Atacarejo","Farmacias / Varejo de Saude","Bancos / Financeiro / Seguros",
+  "Mineracao","Oleo e Gas / Energia","Logistica / Transporte","Servicos Terceirizados",
+  "Papel e Celulose / Florestal","Industria Automotiva","Construcao Civil","Tecnologia / Healthtech",
+  "Agronegocio","Telecomunicacoes","Educacao","Governo / Regulacao / Autarquias",
+  "Consultoria / Certificacao","Academia / Pesquisa","Entidade de Classe / Associacao","Outro"
+];
+
+const NIVEIS = [
+  {value:"A",label:"Nivel A - Decisor Formal",desc:"Define orcamento, regra e meta. Aprova/nega, muda prioridade.",color:"#dc2626",bg:"#fef2f2"},
+  {value:"B",label:"Nivel B - Co-decisor",desc:"Desenha a agenda, define padrao, prioriza e controla execucao.",color:"#ea580c",bg:"#fff7ed"},
+  {value:"C",label:"Nivel C - Influenciador",desc:"Alto poder sobre adesao e resultado, sem assinar orcamento.",color:"#2563eb",bg:"#eff6ff"},
+  {value:"D",label:"Nivel D - Legitimador Externo",desc:"Eleva/limita capacidade e reputacao. Forte em crise e ESG.",color:"#6b7280",bg:"#f9fafb"},
+];
+
+const CRIT_INST = [
+  {key:"autoridade",label:"Autoridade e Reputacao",desc:"Reconhecimento publico no ecossistema",icon:"\u{1F3DB}\u{FE0F}"},
+  {key:"articulacao",label:"Articulacao Institucional",desc:"Capacidade de abertura de portas e agenda",icon:"\u{1F91D}"},
+  {key:"legitimidade",label:"Legitimidade Tecnica",desc:"Credencial academica ou tecnica reconhecida",icon:"\u{1F393}"},
+  {key:"representatividade",label:"Representatividade Setorial",desc:"Representacao empresarial, governo ou setor publico",icon:"\u{1F3E2}"},
+];
+
+const CRIT_GOV = [
+  {key:"influencia",label:"Influencia na Agenda",desc:"Grau de influencia sobre decisoes",icon:"\u{26A1}"},
+  {key:"proximidade",label:"Proximidade com Operacao",desc:"Contato direto com a execucao",icon:"\u{1F4CD}"},
+];
+
+const DEFAULT_SCORES = {autoridade:3,articulacao:3,legitimidade:3,representatividade:3,influencia:3,proximidade:3};
+
+const DOC_CANDIDATES = [
+  {id:1,name:"Rubens Curvelo",perfil:"lider_saude",origem:"ISQUA / Acreditacao",mercado:"Saude - Operadoras / Hospitais",nivel:"D",linkedin:"",linkedinNotas:"",scores:{autoridade:4,articulacao:4,legitimidade:5,representatividade:3,influencia:4,proximidade:3}},
+  {id:2,name:"Ex-Diretor(a) ANS",perfil:"lider_publico",origem:"Agencia Nacional de Saude Suplementar",mercado:"Governo / Regulacao / Autarquias",nivel:"A",linkedin:"",linkedinNotas:"",scores:{autoridade:5,articulacao:5,legitimidade:4,representatividade:4,influencia:5,proximidade:2}},
+  {id:3,name:"Ex-Ministro(a) do Trabalho",perfil:"lider_publico",origem:"Governo Federal / MTE",mercado:"Governo / Regulacao / Autarquias",nivel:"A",linkedin:"",linkedinNotas:"",scores:{autoridade:5,articulacao:5,legitimidade:4,representatividade:5,influencia:5,proximidade:2}},
+  {id:4,name:"Representante ANAMT",perfil:"educador",origem:"Assoc. Nac. de Medicina do Trabalho",mercado:"Saude Ocupacional / SST",nivel:"D",linkedin:"",linkedinNotas:"",scores:{autoridade:4,articulacao:3,legitimidade:5,representatividade:4,influencia:4,proximidade:4}},
+  {id:5,name:"Representante CNI",perfil:"lider_setorial",origem:"Confederacao Nacional da Industria",mercado:"Entidade de Classe / Associacao",nivel:"D",linkedin:"",linkedinNotas:"",scores:{autoridade:4,articulacao:5,legitimidade:3,representatividade:5,influencia:4,proximidade:2}},
+  {id:6,name:"Representante Unidas",perfil:"lider_saude",origem:"Uniao Nac. Inst. Autogestao em Saude",mercado:"Saude - Operadoras / Hospitais",nivel:"C",linkedin:"",linkedinNotas:"",scores:{autoridade:3,articulacao:4,legitimidade:3,representatividade:4,influencia:3,proximidade:3}},
+  {id:7,name:"Representante INSS",perfil:"lider_publico",origem:"INSS / Pericia e Reabilitacao",mercado:"Governo / Regulacao / Autarquias",nivel:"B",linkedin:"",linkedinNotas:"",scores:{autoridade:4,articulacao:3,legitimidade:4,representatividade:4,influencia:4,proximidade:3}},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  candidates: JSON.parse(localStorage.getItem('asap_candidates') || 'null') || DOC_CANDIDATES,
+  activeTab: null,
+  apiKey: localStorage.getItem('asap_api_key') || '',
+  apiProvider: localStorage.getItem('asap_api_provider') || 'anthropic',
+  filterAderencia: 'todos',
+  filterNivel: 'todos',
+  analyzing: false,
+  aiResult: null,
+};
+
+function save(){
+  localStorage.setItem('asap_candidates', JSON.stringify(state.candidates));
+  if(state.apiKey) localStorage.setItem('asap_api_key', state.apiKey);
+  localStorage.setItem('asap_api_provider', state.apiProvider);
+}
+
+// ============================================================
+// CALCULATIONS
+// ============================================================
+function nivelScore(n){return{A:4,B:3,C:2,D:1}[n]||1}
+
+function calcScore(scores, nivel){
+  const inst = (scores.autoridade+scores.articulacao+scores.legitimidade+scores.representatividade)/20*100;
+  const gov = (scores.influencia+scores.proximidade+nivelScore(nivel))/14*100;
+  const bonus = CRIT_INST.filter(c=>scores[c.key]>=4).length>=2?5:0;
+  return Math.min(100, Math.round(inst*0.6 + gov*0.4 + bonus));
+}
+
+function getAderencia(scores, perfil, nivel){
+  const funcoes = CRIT_INST.filter(c=>scores[c.key]>=4).length;
+  let pts = funcoes*2;
+  pts += scores.articulacao>=4?3:scores.articulacao>=3?1:0;
+  pts += scores.autoridade>=4?3:scores.autoridade>=3?1:0;
+  pts += scores.influencia>=4?2:scores.influencia>=3?1:0;
+  pts += nivelScore(nivel)>=3?2:nivelScore(nivel)>=2?1:0;
+  if(perfil==='lider_publico'||perfil==='lider_setorial')pts+=2;
+  if(perfil==='lider_saude'||perfil==='lider_corporativo')pts+=1;
+  if(pts>=15)return{label:"Altissimo",cls:"badge-green",icon:"\u{1F525}"};
+  if(pts>=10)return{label:"Alto",cls:"badge-blue",icon:"\u{2B06}\u{FE0F}"};
+  return{label:"Neutro",cls:"badge-gray",icon:"\u{2796}"};
+}
+
+function getQuadrante(inf, prox){
+  if(inf>=3&&prox>=3)return{label:"P1 - Governar semanal",cls:"badge-red"};
+  if(inf>=3&&prox<3)return{label:"P2 - Governar mensal",cls:"badge-orange"};
+  if(inf<3&&prox>=3)return{label:"P3 - Engajar/treinar",cls:"badge-blue"};
+  return{label:"P4 - Monitorar",cls:"badge-gray"};
+}
+
+function getClassificacao(score){
+  if(score>=85)return{label:"Altamente Recomendado",cls:"badge-green",badge:"A"};
+  if(score>=70)return{label:"Recomendado",cls:"badge-blue",badge:"B"};
+  if(score>=55)return{label:"Considerar",cls:"badge-orange",badge:"C"};
+  return{label:"Prioridade Menor",cls:"badge-gray",badge:"D"};
+}
+
+// ============================================================
+// AI ANALYSIS
+// ============================================================
+async function analyzeWithAI(profileText, candidateName){
+  state.analyzing = true;
+  state.aiResult = null;
+  render();
+
+  const systemPrompt = `Voce e um consultor especialista em governanca corporativa e saude corporativa no Brasil.
+Analise o perfil profissional fornecido e avalie o candidato para um Conselho Emerito de uma associacao (ASAP) focada em saude corporativa.
+
+Retorne EXCLUSIVAMENTE um JSON valido (sem markdown, sem texto antes ou depois) com esta estrutura:
+{
+  "nome": "nome completo",
+  "perfil_sugerido": "lider_corporativo|lider_publico|lider_saude|educador|lider_feminino|lider_setorial",
+  "origem": "instituicao principal",
+  "mercado_sugerido": "um dos mercados da lista",
+  "nivel_sugerido": "A|B|C|D",
+  "scores": {
+    "autoridade": 1-5,
+    "articulacao": 1-5,
+    "legitimidade": 1-5,
+    "representatividade": 1-5,
+    "influencia": 1-5,
+    "proximidade": 1-5
+  },
+  "justificativa": "2-3 frases explicando a avaliacao",
+  "pontos_fortes": ["ponto 1", "ponto 2"],
+  "pontos_atencao": ["ponto 1"]
+}
+
+Mercados validos: ${MERCADOS.join(', ')}
+
+Criterios:
+- Autoridade: reconhecimento publico no ecossistema
+- Articulacao: capacidade de abrir portas institucionais
+- Legitimidade: credencial tecnica/cientifica
+- Representatividade: representacao empresarial/governamental
+- Influencia: grau de influencia em decisoes de saude corporativa
+- Proximidade: contato direto com operacao de saude corporativa
+- Nivel: A=decisor formal, B=co-decisor, C=influenciador execucao, D=legitimador externo`;
+
+  try {
+    let response;
+    if(state.apiProvider === 'anthropic'){
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{
+          'Content-Type':'application/json',
+          'x-api-key': state.apiKey,
+          'anthropic-version':'2023-06-01',
+          'anthropic-dangerous-direct-browser-access':'true'
+        },
+        body: JSON.stringify({
+          model:'claude-sonnet-4-20250514',
+          max_tokens:1024,
+          messages:[{role:'user',content:`Analise este perfil profissional para o Conselho Emerito ASAP.\n\nNome: ${candidateName}\n\nPerfil LinkedIn / Informacoes:\n${profileText}`}],
+          system: systemPrompt
+        })
+      });
+      const data = await response.json();
+      if(data.error) throw new Error(data.error.message);
+      const text = data.content[0].text;
+      state.aiResult = JSON.parse(text);
+    } else {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${state.apiKey}`},
+        body: JSON.stringify({
+          model:'gpt-4o-mini',
+          messages:[
+            {role:'system',content:systemPrompt},
+            {role:'user',content:`Analise este perfil profissional para o Conselho Emerito ASAP.\n\nNome: ${candidateName}\n\nPerfil LinkedIn / Informacoes:\n${profileText}`}
+          ],
+          temperature:0.3
+        })
+      });
+      const data = await response.json();
+      if(data.error) throw new Error(data.error.message);
+      state.aiResult = JSON.parse(data.choices[0].message.content);
+    }
+  } catch(e){
+    state.aiResult = {error: e.message};
+  }
+  state.analyzing = false;
+  render();
+}
+
+function applyAIResult(id){
+  if(!state.aiResult || state.aiResult.error) return;
+  const r = state.aiResult;
+  state.candidates = state.candidates.map(c=>{
+    if(c.id!==id)return c;
+    return{
+      ...c,
+      perfil: r.perfil_sugerido || c.perfil,
+      origem: r.origem || c.origem,
+      mercado: r.mercado_sugerido || c.mercado,
+      nivel: r.nivel_sugerido || c.nivel,
+      scores: r.scores || c.scores,
+      linkedinNotas: r.justificativa + '\n\nPontos fortes: ' + (r.pontos_fortes||[]).join(', ') + '\nAtencao: ' + (r.pontos_atencao||[]).join(', ')
+    };
+  });
+  state.aiResult = null;
+  save();
+  render();
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+function render(){
+  const app = document.getElementById('app');
+  const enriched = state.candidates.map(c=>({...c, totalScore: calcScore(c.scores, c.nivel)}));
+  const ranking = enriched.filter(c=>c.name.trim()).sort((a,b)=>b.totalScore-a.totalScore);
+
+  // Stats
+  const valid = enriched.filter(c=>c.name.trim());
+  const stats = {
+    total: valid.length,
+    altissimo: valid.filter(c=>getAderencia(c.scores,c.perfil,c.nivel).label==='Altissimo').length,
+    alto: valid.filter(c=>getAderencia(c.scores,c.perfil,c.nivel).label==='Alto').length,
+    neutro: valid.filter(c=>getAderencia(c.scores,c.perfil,c.nivel).label==='Neutro').length,
+    perfis: new Set(valid.map(c=>c.perfil).filter(Boolean)).size,
+    mercados: new Set(valid.map(c=>c.mercado).filter(Boolean)).size,
+  };
+
+  let filtered = ranking;
+  if(state.filterAderencia!=='todos') filtered=filtered.filter(c=>getAderencia(c.scores,c.perfil,c.nivel).label.toLowerCase()===state.filterAderencia);
+  if(state.filterNivel!=='todos') filtered=filtered.filter(c=>c.nivel===state.filterNivel);
+
+  let html = `
+    <div class="header">
+      <small>ASAP - Conselho Emerito</small>
+      <h1>Simulador de Qualificacao com IA</h1>
+      <p>Avalie candidatos com analise automatica de perfil LinkedIn via inteligencia artificial.</p>
+    </div>
+
+    <!-- API Config -->
+    <div class="api-config">
+      <h4>\u{1F511} Configuracao da IA (necessario para analise automatica)</h4>
+      <div class="row" style="margin-top:10px">
+        <div class="input-group">
+          <label>Provedor de IA</label>
+          <select onchange="state.apiProvider=this.value;save();render()" style="max-width:300px">
+            <option value="anthropic" ${state.apiProvider==='anthropic'?'selected':''}>Anthropic (Claude)</option>
+            <option value="openai" ${state.apiProvider==='openai'?'selected':''}>OpenAI (GPT)</option>
+          </select>
+        </div>
+        <div class="input-group" style="flex:2">
+          <label>API Key (${state.apiProvider==='anthropic'?'Anthropic':'OpenAI'})</label>
+          <input type="password" value="${state.apiKey}" placeholder="Cole sua chave de API aqui..." onchange="state.apiKey=this.value;save()">
+        </div>
+      </div>
+      <p style="font-size:11px;color:#64748b;margin-top:8px">A chave fica salva apenas no seu navegador (localStorage). Nenhum dado e enviado para servidores externos alem da API de IA.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      ${[
+        {l:'Candidatos',v:stats.total,c:'#1e293b'},
+        {l:'Altissimo',v:stats.altissimo,c:'#15803d'},
+        {l:'Alto',v:stats.alto,c:'#2563eb'},
+        {l:'Neutro',v:stats.neutro,c:'#6b7280'},
+        {l:'Perfis',v:stats.perfis+'/'+PERFIS.length,c:'#7c3aed'},
+        {l:'Mercados',v:stats.mercados,c:'#ea580c'},
+      ].map(s=>`<div class="stat-card"><div class="val" style="color:${s.c}">${s.v}</div><div class="lbl">${s.l}</div></div>`).join('')}
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      ${state.candidates.map(c=>{
+        const sc = calcScore(c.scores,c.nivel);
+        const cl = getClassificacao(sc);
+        const ad = getAderencia(c.scores,c.perfil,c.nivel);
+        return `<div class="tab ${state.activeTab===c.id?'active':''}" onclick="state.activeTab=state.activeTab===${c.id}?null:${c.id};render()">
+          <span style="font-size:10px">${ad.icon}</span>
+          ${c.name||'Novo candidato'}
+          ${c.name?`<span class="mini-badge" style="color:${cl.badge==='A'?'#15803d':cl.badge==='B'?'#2563eb':'#ea580c'};background:${cl.badge==='A'?'#f0fdf4':cl.badge==='B'?'#eff6ff':'#fff7ed'}">${sc}</span>`:''}
+        </div>`;
+      }).join('')}
+      <div class="tab" onclick="addCandidate()" style="border:2px dashed #cbd5e1;background:transparent;color:#64748b">+ Adicionar</div>
+    </div>`;
+
+  // Active editor
+  if(state.activeTab){
+    const c = state.candidates.find(x=>x.id===state.activeTab);
+    if(c){
+      const quad = getQuadrante(c.scores.influencia, c.scores.proximidade);
+      const ad = getAderencia(c.scores, c.perfil, c.nivel);
+      const sc = calcScore(c.scores, c.nivel);
+
+      html += `<div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <h3 style="margin:0">Avaliacao do Candidato</h3>
+          <div style="display:flex;gap:10px;align-items:center">
+            <span class="badge ${ad.cls}">${ad.icon} Aderencia: ${ad.label}</span>
+            <span class="badge" style="font-size:14px;font-weight:800;color:${getClassificacao(sc).badge==='A'?'#15803d':'#2563eb'}">${sc} pts</span>
+            ${state.candidates.length>1?`<button class="btn btn-danger btn-sm" onclick="removeCandidate(${c.id})">Remover</button>`:''}
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-group" style="flex:2">
+            <label>Nome do Candidato</label>
+            <input value="${c.name}" placeholder="Ex: Dr. Joao Silva" oninput="updateField(${c.id},'name',this.value)">
+          </div>
+          <div class="input-group">
+            <label>Perfil de Representatividade</label>
+            <select onchange="updateField(${c.id},'perfil',this.value)">
+              <option value="">Selecione...</option>
+              ${PERFIS.map(p=>`<option value="${p.value}" ${c.perfil===p.value?'selected':''}>${p.icon} ${p.label}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-group">
+            <label>Instituicao / Origem</label>
+            <input value="${c.origem||''}" placeholder="Ex: ANAMT, Vale, Governo Federal..." oninput="updateField(${c.id},'origem',this.value)">
+          </div>
+          <div class="input-group">
+            <label>Mercado de Atuacao</label>
+            <select onchange="updateField(${c.id},'mercado',this.value)">
+              <option value="">Selecione...</option>
+              ${MERCADOS.map(m=>`<option value="${m}" ${c.mercado===m?'selected':''}>${m}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+
+        <!-- LinkedIn + AI -->
+        <div class="linkedin-section">
+          <div class="li-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#0a66c2"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn + Analise por IA
+          </div>
+          <div class="input-group" style="margin-bottom:10px">
+            <label>URL do LinkedIn</label>
+            <input type="url" value="${c.linkedin||''}" placeholder="https://linkedin.com/in/nome" oninput="updateField(${c.id},'linkedin',this.value)">
+          </div>
+          <div class="input-group" style="margin-bottom:10px">
+            <label>Informacoes do perfil (cole aqui o resumo, cargo, experiencia)</label>
+            <textarea placeholder="Cole aqui as informacoes do perfil LinkedIn: cargo atual, experiencia, board seats, publicacoes, formacao..."
+              oninput="updateField(${c.id},'linkedinNotas',this.value)">${c.linkedinNotas||''}</textarea>
+          </div>
+          <button class="btn btn-primary" onclick="runAI(${c.id})" ${!state.apiKey||state.analyzing?'disabled':''}>
+            ${state.analyzing?'<span class="loading"></span> Analisando...':'\u{1F916} Analisar com IA e sugerir scores'}
+          </button>
+          <span style="font-size:11px;color:#64748b;margin-left:10px">${!state.apiKey?'Configure a API Key acima':''}</span>
+
+          ${state.aiResult && !state.aiResult.error ? `
+            <div class="ai-box">
+              <h4>\u{1F916} Sugestao da IA</h4>
+              <p><strong>Perfil:</strong> ${state.aiResult.perfil_sugerido} | <strong>Nivel:</strong> ${state.aiResult.nivel_sugerido} | <strong>Mercado:</strong> ${state.aiResult.mercado_sugerido}</p>
+              <p style="margin-top:6px"><strong>Scores sugeridos:</strong> Autoridade ${state.aiResult.scores?.autoridade}, Articulacao ${state.aiResult.scores?.articulacao}, Legitimidade ${state.aiResult.scores?.legitimidade}, Representatividade ${state.aiResult.scores?.representatividade}, Influencia ${state.aiResult.scores?.influencia}, Proximidade ${state.aiResult.scores?.proximidade}</p>
+              <p style="margin-top:6px">${state.aiResult.justificativa}</p>
+              <p style="margin-top:4px;font-size:11px"><strong>Pontos fortes:</strong> ${(state.aiResult.pontos_fortes||[]).join(', ')}</p>
+              <p style="font-size:11px"><strong>Atencao:</strong> ${(state.aiResult.pontos_atencao||[]).join(', ')}</p>
+              <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="applyAIResult(${c.id})">\u{2705} Aplicar sugestoes da IA</button>
+              <button class="btn btn-secondary btn-sm" style="margin-top:10px" onclick="state.aiResult=null;render()">Descartar</button>
+            </div>
+          `:''}
+          ${state.aiResult?.error ? `<div style="margin-top:10px;padding:10px;background:#fef2f2;border-radius:8px;font-size:12px;color:#dc2626">Erro: ${state.aiResult.error}</div>`:''}
+        </div>
+
+        <!-- Badges -->
+        <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center">
+          <span class="badge ${quad.cls}">${quad.label}</span>
+          ${c.perfil?`<span class="badge badge-purple">${PERFIS.find(p=>p.value===c.perfil)?.icon||''} ${PERFIS.find(p=>p.value===c.perfil)?.label||''}</span>`:''}
+          ${c.nivel?`<span class="badge" style="color:${NIVEIS.find(n=>n.value===c.nivel)?.color};background:${NIVEIS.find(n=>n.value===c.nivel)?.bg};border:1px solid ${NIVEIS.find(n=>n.value===c.nivel)?.color}33;font-weight:700">Nivel ${c.nivel}</span>`:''}
+        </div>
+
+        <!-- 3-col grid -->
+        <div class="grid-3">
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:#2563eb;border-bottom:2px solid #2563eb;padding-bottom:6px;margin-bottom:14px">Criterios Institucionais</h4>
+            ${CRIT_INST.map(cr=>`
+              <div class="score-slider">
+                <div class="slider-header">
+                  <span>${cr.icon} ${cr.label}</span>
+                  <span class="score-val" style="background:${c.scores[cr.key]>=4?'#15803d':c.scores[cr.key]>=3?'#2563eb':'#ea580c'}">${c.scores[cr.key]}/5</span>
+                </div>
+                <div class="desc">${cr.desc}</div>
+                <input type="range" min="1" max="5" value="${c.scores[cr.key]}" oninput="updateScore(${c.id},'${cr.key}',+this.value)">
+              </div>
+            `).join('')}
+          </div>
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:#ea580c;border-bottom:2px solid #ea580c;padding-bottom:6px;margin-bottom:14px">Quadrantes de Governanca</h4>
+            ${CRIT_GOV.map(cr=>`
+              <div class="score-slider">
+                <div class="slider-header">
+                  <span>${cr.icon} ${cr.label}</span>
+                  <span class="score-val" style="background:${c.scores[cr.key]>=4?'#15803d':c.scores[cr.key]>=3?'#2563eb':'#ea580c'}">${c.scores[cr.key]}/5</span>
+                </div>
+                <div class="desc">${cr.desc}</div>
+                <input type="range" min="1" max="5" value="${c.scores[cr.key]}" oninput="updateScore(${c.id},'${cr.key}',+this.value)">
+              </div>
+            `).join('')}
+          </div>
+          <div>
+            <h4 style="font-size:13px;font-weight:700;color:#7c3aed;border-bottom:2px solid #7c3aed;padding-bottom:6px;margin-bottom:14px">Nivel de Decisao</h4>
+            ${NIVEIS.map(n=>`
+              <button class="nivel-btn ${c.nivel===n.value?'active':''}" style="${c.nivel===n.value?`border-color:${n.color};background:${n.bg}`:''}" onclick="updateField(${c.id},'nivel','${n.value}')">
+                <div class="circle" style="background:${c.nivel===n.value?n.color:'#e2e8f0'}">${n.value}</div>
+                <div><div class="nivel-label" style="color:${c.nivel===n.value?n.color:'#475569'}">${n.label}</div><div class="nivel-desc">${n.desc}</div></div>
+              </button>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Funcoes -->
+        <div style="margin-top:20px;padding:12px;background:#f8fafc;border-radius:8px">
+          <div style="font-size:12px;font-weight:600;color:#64748b;margin-bottom:6px">Funcoes institucionais cumpridas (nota 4+):</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${CRIT_INST.filter(cr=>c.scores[cr.key]>=4).map(cr=>`<span class="badge badge-blue" style="font-size:10px">${cr.icon} ${cr.label}</span>`).join('') || '<span style="font-size:11px;color:#94a3b8">Nenhuma funcao com nota 4+</span>'}
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+
+  // Filters
+  html += `
+    <div class="filter-row">
+      <div class="filter-group">
+        <span>Aderencia:</span>
+        ${['todos','altissimo','alto','neutro'].map(f=>`<button class="filter-btn ${state.filterAderencia===f?'active':''}" onclick="state.filterAderencia='${f}';render()">${f==='todos'?'Todos':f[0].toUpperCase()+f.slice(1)}</button>`).join('')}
+      </div>
+      <div class="filter-group">
+        <span>Nivel:</span>
+        ${['todos','A','B','C','D'].map(f=>`<button class="filter-btn ${state.filterNivel===f?'active':''}" onclick="state.filterNivel='${f}';render()">${f==='todos'?'Todos':'Nivel '+f}</button>`).join('')}
+      </div>
+    </div>`;
+
+  // Ranking table
+  if(filtered.length>0){
+    html += `<div class="card">
+      <h3>Ranking de Qualificacao</h3>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>#</th><th>Nome</th><th>Perfil</th><th>Mercado</th><th style="text-align:center">Nivel</th>
+            <th style="text-align:center">Score</th><th style="text-align:center">Aderencia</th>
+            <th style="text-align:center">Quadrante</th><th style="text-align:center">Funcoes</th>
+          </tr></thead>
+          <tbody>
+            ${filtered.map((c,i)=>{
+              const cl = getClassificacao(c.totalScore);
+              const ad = getAderencia(c.scores,c.perfil,c.nivel);
+              const qu = getQuadrante(c.scores.influencia,c.scores.proximidade);
+              const fn = CRIT_INST.filter(cr=>c.scores[cr.key]>=4).length;
+              const nv = NIVEIS.find(n=>n.value===c.nivel);
+              return `<tr class="clickable" onclick="state.activeTab=${c.id};render();window.scrollTo(0,400)" style="${state.activeTab===c.id?'background:#eff6ff':''}">
+                <td style="font-weight:700;color:#94a3b8">${i+1}</td>
+                <td style="font-weight:600">${c.name}<div style="font-size:10px;color:#94a3b8">${c.origem||''}</div></td>
+                <td>${PERFIS.find(p=>p.value===c.perfil)?.icon||''} <span style="font-size:11px">${PERFIS.find(p=>p.value===c.perfil)?.label||'-'}</span></td>
+                <td style="font-size:11px;color:#64748b">${c.mercado||'-'}</td>
+                <td style="text-align:center"><span class="badge" style="color:${nv?.color||'#6b7280'};background:${nv?.bg||'#f9fafb'};font-weight:700;font-size:11px">${c.nivel||'-'}</span></td>
+                <td style="text-align:center;font-weight:800;font-size:16px;color:${cl.badge==='A'?'#15803d':cl.badge==='B'?'#2563eb':'#ea580c'}">${c.totalScore}</td>
+                <td style="text-align:center"><span class="badge ${ad.cls}" style="font-size:10px">${ad.icon} ${ad.label}</span></td>
+                <td style="text-align:center"><span class="badge ${qu.cls}" style="font-size:9px">${qu.label}</span></td>
+                <td style="text-align:center;font-weight:700;color:${fn>=2?'#15803d':fn>=1?'#ea580c':'#94a3b8'}">${fn}/4</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+
+  // Export buttons
+  html += `<div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+    <button class="btn btn-secondary" onclick="exportCSV()">\u{1F4CB} Exportar CSV</button>
+    <button class="btn btn-secondary" onclick="resetData()">\u{1F504} Resetar para dados originais</button>
+  </div>`;
+
+  app.innerHTML = html;
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+function updateField(id,field,value){
+  state.candidates = state.candidates.map(c=>c.id===id?{...c,[field]:value}:c);
+  save(); render();
+}
+function updateScore(id,key,value){
+  state.candidates = state.candidates.map(c=>c.id===id?{...c,scores:{...c.scores,[key]:value}}:c);
+  save(); render();
+}
+function addCandidate(){
+  const newId = Math.max(...state.candidates.map(c=>c.id),0)+1;
+  state.candidates.push({id:newId,name:'',perfil:'',origem:'',mercado:'',nivel:'D',linkedin:'',linkedinNotas:'',scores:{...DEFAULT_SCORES}});
+  state.activeTab = newId;
+  save(); render();
+}
+function removeCandidate(id){
+  if(state.candidates.length<=1)return;
+  state.candidates = state.candidates.filter(c=>c.id!==id);
+  if(state.activeTab===id) state.activeTab=null;
+  save(); render();
+}
+function runAI(id){
+  const c = state.candidates.find(x=>x.id===id);
+  if(!c)return;
+  const text = c.linkedinNotas || c.origem || '';
+  if(!text.trim()){alert('Cole as informacoes do perfil LinkedIn no campo de texto antes de analisar.');return;}
+  analyzeWithAI(text, c.name);
+}
+function resetData(){
+  if(confirm('Tem certeza? Isso vai resetar todos os candidatos para os dados originais do documento.')){
+    state.candidates = JSON.parse(JSON.stringify(DOC_CANDIDATES));
+    state.activeTab = null;
+    save(); render();
+  }
+}
+function exportCSV(){
+  const enriched = state.candidates.filter(c=>c.name.trim()).map(c=>({...c,totalScore:calcScore(c.scores,c.nivel)}));
+  let csv = 'Nome,Perfil,Origem,Mercado,Nivel,Autoridade,Articulacao,Legitimidade,Representatividade,Influencia,Proximidade,Score,Aderencia,Quadrante,LinkedIn\n';
+  enriched.forEach(c=>{
+    const ad = getAderencia(c.scores,c.perfil,c.nivel);
+    const qu = getQuadrante(c.scores.influencia,c.scores.proximidade);
+    csv += `"${c.name}","${PERFIS.find(p=>p.value===c.perfil)?.label||''}","${c.origem}","${c.mercado}","${c.nivel}",${c.scores.autoridade},${c.scores.articulacao},${c.scores.legitimidade},${c.scores.representatividade},${c.scores.influencia},${c.scores.proximidade},${c.totalScore},"${ad.label}","${qu.label}","${c.linkedin}"\n`;
+  });
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ranking_conselho_emerito_asap.csv';
+  a.click();
+}
+
+// Init
+render();
+</script>
+</body>
+</html>
